@@ -35,7 +35,7 @@ jobs:
         # Workspace: /git_repo/hardhat
       - name: Running image container
         run: |
-          docker run -d --name geth-devnet-geth-devnet-go-ethereum -p 8545:8545 -p 8546:8546 ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ env.IMAGE_TAG }} \
+          docker run -d --name geth-devnet-go-ethereum -p 8545:8545 -p 8546:8546 ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ env.IMAGE_TAG }} \
             --dev --http --http.addr 0.0.0.0 --http.port 8545 \
             --http.api personal,db,eth,net,web3 --dev.period 5
 
