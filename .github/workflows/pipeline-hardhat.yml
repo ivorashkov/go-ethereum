@@ -6,7 +6,7 @@ on:
     branches: ["master"]
 
 env:
-  IMAGE: ivaylorashkov/geth-devnet-go-ethereum
+  IMAGE: ivaylorashkov/go-ethereum
   OWNER: ivaylorashkov
   IMAGE_TAG: latest
   REGISTRY: docker.io
