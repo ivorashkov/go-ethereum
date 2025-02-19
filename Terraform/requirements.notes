@@ -1,0 +1,156 @@
+1. Creating EKS in AWS will allow us to not worry about Master Nodes and their maintenance.
+    Preparation steps:
+    1. Creating AWS account;
+    2. Create VPC - Virtual Private Space in AWS for the user;
+    3. Creat IAM role (AWS user) 
+    4. Security Group (list of permissions for that user to work with EKS)
+    5. Create Cluster Coantrol Plane -> Master Nodes
+        - choose cluster name;
+        - k8s version;
+        - choose region;
+        - choose VPC for the cluster;
+        - set security for the cluster;
+    6. Create Worker Nodes and connect to cluster;
+        6.1. on AWS worker nodes are EC2 instances;
+            - Create EC2 as a Node Group ( group of Nodes);
+                !! Not a separate EC2 instances
+            - When they are created as Node Group, we choose the Cluster to join/attach to;
+            - Define Security Group;
+            - Select instance type;
+            - Resources;
+            - with Node Group we also have Autoscaling option;
+                - define max number of nodes;
+                - define min number of nodes;
+                - define desired size;
+        6.2 Connect with local machine to the Cluster to deploy apps
+
+
+____________________________________________________________________________________________
+
+Creating Kubernetes Custer in GKE:
+What we need:
+    1. GKE Account;
+    2. Create GKE (Google Kubernetes Engine) cluster in Google Cloud;
+    3. Deploys a Kubernetes deployment using container image;
+    4. Configures kubectl to interact with the cluster;
+    5. Terraform configured;
+    6. Gcloud CLI;
+    7. Kubectl installed;
+
+project: pid-goeuweut-devops
+project ID: pid-goeuweut-devops
+
+kubectl version --client
+    Client Version: v1.32.2
+    Kustomize Version: v5.5.0
+gcloud version
+    Google Cloud SDK 510.0.0
+    alpha 2025.02.10
+    beta 2025.02.10
+    bq 2.1.12
+    bundled-python3-unix 3.12.8
+    core 2025.02.10
+    gcloud-crc32c 1.0.0
+    gsutil 5.33
+terraform version
+    Terraform v1.10.5
+    on linux_amd64  
+
+Steps:
+**************** Install Google Cloud SDK (gcloud) **************** 
+Update and Install Required Packages:
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y curl unzip apt-transport-https ca-certificates gnupg
+
+Add Google Cloud repository key:
+curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
+
+Add Google Cloud repository:
+echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee /etc/apt/sources.list.d/google-cloud-sdk.list
+
+Install Google Cloud SDK:
+sudo apt update && sudo apt install -y google-cloud-sdk
+
+Authenticate Google Cloud CLI:
+gcloud auth login
+gcloud auth application-default login
+
+**************** Install Terraform ****************
+Download and Install the Latest Terraform:
+curl -fsSL https://releases.hashicorp.com/terraform/1.10.5/terraform_1.10.5_linux_amd64.zip -o terraform.zip
+unzip terraform.zip
+sudo mv terraform /usr/local/bin/
+rm terraform.zip
+
+
+Login into my google account:
+gcloud auth login
+
+List available Projects: 
+gcloud projects list
+
+Set the active project:
+gcloud config set project pid-goeuweut-devops
+gcloud auth application-default set-quota-project pid-goeuweut-devops
+gcloud auth application-default print-access-token
+
+Verify the current project:
+gcloud config get-value project
+
+Check regions:
+gcloud compute regions list
+- Choosing region: europe-west1
+gcloud compute zones list | grep europe-west1
+- Choosing zone: europe-west1-b 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
