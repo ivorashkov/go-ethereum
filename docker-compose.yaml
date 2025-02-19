@@ -20,7 +20,8 @@ services:
       --http.addr=0.0.0.0
       --http.port=8545
       --http.api=web3,eth,net,personal
-      --dev.period 5
+      --http.vhosts=*
+      --dev.period=5
 
 networks:
   devnet:
