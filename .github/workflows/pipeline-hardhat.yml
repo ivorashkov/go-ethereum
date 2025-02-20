@@ -41,14 +41,11 @@ jobs:
             --dev --http --http.addr 0.0.0.0 --http.port 8545 \
             --http.api personal,db,eth,net,web3 --dev.period 5
 
-      - name: Check Hardhat directory on runner
-        run: ls -la /home/runner/work/go-ethereum/go-ethereum/hardhat
-
         # copy files from the git_repo to the container
       - name: Copy hardhat files to running container
         run: |
           docker exec geth-devnet-go-ethereum mkdir -p /git_repo/hardhat
-          docker cp ${{ github.workspace }}/hardhat/. geth-devnet-go-ethereum:/git_repo/
+          docker cp /home/runner/work/go-ethereum/go-ethereum/hardhat/. geth-devnet-go-ethereum:/git_repo/hardhat/
           docker exec geth-devnet-go-ethereum ls -l /git_repo/hardhat
           docker exec geth-devnet-go-ethereum ls /git_repo/hardhat
 
