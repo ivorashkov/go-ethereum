@@ -63,7 +63,7 @@ jobs:
         run: docker exec geth-devnet-go-ethereum npx hardhat --version
 
       - name: Deploy hardhat sample project
-        run: docker exec go-ethereum sh -c "cd /git_repo/hardhat && npm install hardhat"
+        run: docker exec geth-devnet-go-ethereum sh -c "cd /git_repo/hardhat && npm install hardhat"
     
       - name: Hardhat tests applied 
         run: |
