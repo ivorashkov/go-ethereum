@@ -76,6 +76,7 @@ gcloud auth login
 gcloud auth application-default login
 
 **************** Install Terraform ****************
+
 Download and Install the Latest Terraform:
 curl -fsSL https://releases.hashicorp.com/terraform/1.10.5/terraform_1.10.5_linux_amd64.zip -o terraform.zip
 unzip terraform.zip
@@ -99,22 +100,62 @@ gcloud config get-value project
 
 Check regions:
 gcloud compute regions list
-- Choosing region: europe-west1
-gcloud compute zones list | grep europe-west1
-- Choosing zone: europe-west1-b 
+- Choosing region: us-central1
+gcloud compute zones list | grep us-central1
+- Choosing zone: us-central1-f 
+
+In order to Create GKE the user should have the following roles:
+ roles/container.admin, roles/compute.networkAdmin, roles/iam.serviceAccountUserc
+
+for deploying the image, we can easily extrac it from dockerhub if it's public,
+but if the image is in private repo we should do the following:
+
+1.kubectl create secret docker-registry dockerhub-secret \
+  --docker-server=https://index.docker.io/v1/ \
+  --docker-username=your-dockerhub-username \
+  --docker-password=your-dockerhub-password \
+  --docker-email=your-email@example.com
+
+2.spec {
+  image_pull_secrets {
+    name = "dockerhub-secret"
+  }
+}
 
 
+____________________ Deploying Terraform to GKE _________________
 
+We are running Terraform on local machine so we need to authenticate:
+1. Authenticate:
+ 1.1 gcloud auth login
+    - You are now logged in as [ivaylo.s.rashkov@gmail.com].
+    - Your current project is [pid-goeuweut-devops].
+    - You are now authenticated with the gcloud CLI!
+ 1.2 gcloud auth application-default login
+    - Credentials saved to file: [/home/ivaylorashkov/.config/gcloud/application_default_credentials.json]
+    - These credentials will be used by any library that requests Application Default Credentials (ADC).
+    - Quota project "pid-goeuweut-devops" was added to ADC which can be used by Google client libraries for billing and quota.
+    - You are now authenticated with the gcloud CLI!
 
+2. Just in case set the project-id:
+ 2.1 gcloud config set project pid-goeuweut-devops
 
+3. Navigate to the directory where main.tf is:
+    - pwd: /home/ivaylorashkov/new_repo/go-ethereum/Terraform
+    - ivaylorashkov@DESKTOP-RBJR4FO:~/new_repo/go-ethereum/Terraform$ ls | grep main.tf
+    ****main.tf
 
+4.terraform init
+    - Terraform has been successfully initialized!
 
+5.Check what terraform is planning to do:
+    5.1 terraform plan
 
+6. Deploy infrastructure:
+    6.1 terraform apply
 
-
-
-
-
+7. Setting up region and zone as zone = us-central1-f, due to Google
+Copy policy on 3 zones, which exceeds the limit 250GB since 3*100GB = 300GB
 
 
 
