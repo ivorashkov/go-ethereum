@@ -46,7 +46,8 @@ jobs:
         run: |
           docker exec geth-devnet-go-ethereum mkdir -p /git_repo/hardhat
           docker cp ${{ github.workspace }}/hardhat/. geth-devnet-go-ethereum:/git_repo/
-          docker exec geth-devnet-go-ethereum ls -la /git_repo/hardhat
+          docker exec geth-devnet-go-ethereum ls -l /git_repo/hardhat
+          docker exec geth-devnet-go-ethereum ls /git_repo/hardhat
 
         # install nodejs and npm in docker container
       - name: Installing Node.js and npm in the container
@@ -59,14 +60,10 @@ jobs:
 
         # Check hardhat version if its installed properly
       - name: Check Hardhat version
-        run: |
-          docker exec geth-devnet-go-ethereum npx hardhat --version
+        run: docker exec geth-devnet-go-ethereum npx hardhat --version
 
       - name: Deploy hardhat sample project
-        run: |
-          docker exec geth-devnet-go-ethereum sh -c "
-            cd /git_repo/hardhat &&
-            yes | npx hardhat ignition deploy ./ignition/modules/Lock.js --network devnetwork"
+        run: docker exec go-ethereum sh -c "cd /git_repo/hardhat && npm install hardhat"
     
       - name: Hardhat tests applied 
         run: |
