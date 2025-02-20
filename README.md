@@ -93,6 +93,101 @@ gcloud compute zones list | grep us-central1
 
 ## **STEP 4: Create a GKE Cluster Using Terraform**
 
+
+Create a `main.tf` file with the following content:
+```hcl
+variable "region" {
+  default = "us-central1-f"
+}
+
+variable "zone" {
+  default = "us-central1-f"
+}
+
+variable "project" {
+  default = "pid-goeuweut-devops"
+}
+
+provider "google" {
+  project = var.project
+  region  = var.region
+}
+
+data "google_client_config" "default" {}
+
+resource "google_container_cluster" "primary" {
+  name     = "go-ethereum-cluster"
+  location = var.region
+  remove_default_node_pool = true
+  initial_node_count       = 1
+  network_policy {
+    enabled = true
+  }
+}
+
+resource "google_container_node_pool" "primary_nodes" {
+  name       = "go-ethereum-node-pool"
+  location   = var.zone
+  cluster    = google_container_cluster.primary.name
+  initial_node_count = 1
+  node_config {
+    preemptible  = true
+    machine_type = "n1-standard-1"
+    disk_type    = "pd-standard"
+    metadata = {
+      disable-legacy-endpoints = "true"
+    }
+  }
+}
+
+provider "kubernetes" {
+  host                   = "https://${google_container_cluster.primary.endpoint}"
+  token                  = data.google_client_config.default.access_token
+  cluster_ca_certificate = base64decode(google_container_cluster.primary.master_auth[0].cluster_ca_certificate)
+  ignore_annotations = ["^cloud\\.google\\.com\/.*"]
+}
+
+resource "kubernetes_namespace" "devops_test_gke" {
+  metadata {
+    name = "devops-test-gke"
+  }
+}
+
+resource "kubernetes_deployment" "default" {
+  metadata {
+    name      = "go-ethereum-hardhat"
+    namespace = kubernetes_namespace.devops_test_gke.metadata[0].name
+  }
+  spec {
+    replicas = 3
+    selector {
+      match_labels = {
+        app = "go-ethereum-hardhat"
+      }
+    }
+    template {
+      metadata {
+        labels = {
+          app = "go-ethereum-hardhat"
+        }
+      }
+      spec {
+        container {
+          name  = "go-ethereum-hardhat"
+          image = "docker.io/ivaylorashkov/go-ethereum-hardhat:latest"
+          image_pull_policy = "Always"
+          port {
+            container_port = 8080
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+---
+
 ### **Navigate to the Terraform directory:**
 ```sh
 cd /home/ivaylorashkov/new_repo/go-ethereum/Terraform
@@ -198,6 +293,3 @@ spec {
 
 
 ---
-
-
-
