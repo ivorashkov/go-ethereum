@@ -157,6 +157,21 @@ We are running Terraform on local machine so we need to authenticate:
 7. Setting up region and zone as zone = us-central1-f, due to Google
 Copy policy on 3 zones, which exceeds the limit 250GB since 3*100GB = 300GB
 
+8.Steps after creation:
+- install: sudo apt-get install google-cloud-cli-gke-gcloud-auth-plugin
+- gcloud container clusters get-credentials <your-cluster-name> --zone <your-zone>
+    gcloud container clusters get-credentials go-ethereum-cluster --zone us-central1-f
+- kubectl get nodes 
+    gke-go-ethereum-clus-go-ethereum-node-00bf4844-ftqz
+- kubectl get namespace
+    devops-test-gke
+- kubectl get pods -n <namespace>
+    kubectl get pods -n devops-test-gke
+        go-ethereum-hardhat-547946667d-vkv4s
+- kubectl exec -it <pod-name> -- /bin/sh
+    kubectl exec -it go-ethereum-hardhat-547946667d-vkv4s -n devops-test-gke -- /bin/sh
+
+
 
 
 

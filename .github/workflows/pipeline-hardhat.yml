@@ -45,7 +45,7 @@ jobs:
       - name: Copy hardhat files to running container
         run: |
           docker exec geth-devnet-go-ethereum mkdir -p /git_repo/hardhat
-          docker cp ${{ github.workspace }}/hardhat geth-devnet-go-ethereum:/git_repo/
+          docker cp ${{ github.workspace }}/hardhat/. geth-devnet-go-ethereum:/git_repo/
           docker exec geth-devnet-go-ethereum ls -la /git_repo/hardhat
 
         # install nodejs and npm in docker container
