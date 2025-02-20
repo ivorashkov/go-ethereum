@@ -1,9 +1,9 @@
+# **Creating GKE Cluster using Terraform**
 
+## **Creating Kubernetes Cluster in GKE**
 
-Creating GKE Cluster using ./Terraform/main.tf script
+### What we need:
 
-Creating Kubernetes Custer in GKE:
-What we need:
     1. GKE Account;
     2. Create GKE (Google Kubernetes Engine) cluster in Google Cloud;
     3. Deploys a Kubernetes deployment using container image;
@@ -12,144 +12,231 @@ What we need:
     6. Gcloud CLI;
     7. Kubectl installed;
 
-project: pid-goeuweut-devops
-project ID: pid-goeuweut-devops
+**Project:** `pid-goeuweut-devops`\
+**Project ID:** `pid-goeuweut-devops`
 
+```sh
 kubectl version --client
-    Client Version: v1.32.2
-    Kustomize Version: v5.5.0
-gcloud version
-    Google Cloud SDK 510.0.0
-    alpha 2025.02.10
-    beta 2025.02.10
-    bq 2.1.12
-    bundled-python3-unix 3.12.8
-    core 2025.02.10
-    gcloud-crc32c 1.0.0
-    gsutil 5.33
-terraform version
-    Terraform v1.10.5
-    on linux_amd64  
+# gcloud version
+# terraform version
+```
 
-Steps:
-******** Install Google Cloud SDK (gcloud) ******** 
-Update and Install Required Packages:
+---
+
+## **Install Google Cloud SDK (gcloud)**
+
+### **Update and Install Required Packages:**
+
+```sh
 sudo apt update && sudo apt upgrade -y
 sudo apt install -y curl unzip apt-transport-https ca-certificates gnupg
+```
 
-Add Google Cloud repository key:
+### **Add Google Cloud repository key:**
+
+```sh
 curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
+```
 
-Add Google Cloud repository:
+### **Add Google Cloud repository:**
+
+```sh
 echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee /etc/apt/sources.list.d/google-cloud-sdk.list
+```
 
-Install Google Cloud SDK:
+### **Install Google Cloud SDK:**
+
+```sh
 sudo apt update && sudo apt install -y google-cloud-sdk
+```
 
-Authenticate Google Cloud CLI:
+### **Authenticate Google Cloud CLI:**
+
+```sh
 gcloud auth login
 gcloud auth application-default login
+```
 
-******** Install Terraform ********
+---
 
-Download and Install the Latest Terraform:
+## **Install Terraform**
+
+### **Download and Install the Latest Terraform:**
+
+```sh
 curl -fsSL https://releases.hashicorp.com/terraform/1.10.5/terraform_1.10.5_linux_amd64.zip -o terraform.zip
 unzip terraform.zip
 sudo mv terraform /usr/local/bin/
 rm terraform.zip
+```
 
+---
 
-Login into my google account:
+## **Authenticate with Google Cloud**
+
+### **Login into Google Account:**
+
+```sh
 gcloud auth login
+```
 
-List available Projects: 
+### **List Available Projects:**
+
+```sh
 gcloud projects list
+```
 
-Set the active project:
+### **Set the Active Project:**
+
+```sh
 gcloud config set project pid-goeuweut-devops
 gcloud auth application-default set-quota-project pid-goeuweut-devops
 gcloud auth application-default print-access-token
+```
 
-Verify the current project:
+### **Verify the Current Project:**
+
+```sh
 gcloud config get-value project
+```
 
-Check regions:
+### **Check Available Regions:**
+
+```sh
 gcloud compute regions list
-- Choosing region: us-central1
+```
+
+**Choosing region:** `us-central1`
+
+```sh
 gcloud compute zones list | grep us-central1
-- Choosing zone: us-central1-f 
+```
 
-In order to Create GKE the user should have the following roles:
- roles/container.admin, roles/compute.networkAdmin, roles/iam.serviceAccountUserc
+**Choosing zone:** `us-central1-f`
 
-for deploying the image, we can easily extrac it from dockerhub if it's public,
-but if the image is in private repo we should do the following:
+---
 
-1.kubectl create secret docker-registry dockerhub-secret \
+## **Required Roles for GKE Creation**
+
+The user should have the following roles:
+
+- `roles/container.admin`
+- `roles/compute.networkAdmin`
+- `roles/iam.serviceAccountUser`
+
+---
+
+## **Pulling Private Docker Image**
+
+If the image is private, create a secret:
+
+```sh
+kubectl create secret docker-registry dockerhub-secret \
   --docker-server=https://index.docker.io/v1/ \
   --docker-username=your-dockerhub-username \
   --docker-password=your-dockerhub-password \
   --docker-email=your-email@example.com
+```
 
-2.spec {
+Add to your `spec`:
+
+```hcl
+spec {
   image_pull_secrets {
     name = "dockerhub-secret"
   }
 }
+```
 
+---
 
-******** Deploying Terraform to GKE ********
+## **Deploying Terraform to GKE**
 
-We are running Terraform on local machine so we need to authenticate:
-1. Authenticate:
- 1.1 gcloud auth login
-    - You are now logged in as [ivaylo.s.rashkov@gmail.com].
-    - Your current project is [pid-goeuweut-devops].
-    - You are now authenticated with the gcloud CLI!
- 1.2 gcloud auth application-default login
-    - Credentials saved to file: [/home/ivaylorashkov/.config/gcloud/application_default_credentials.json]
-    - These credentials will be used by any library that requests Application Default Credentials (ADC).
-    - Quota project "pid-goeuweut-devops" was added to ADC which can be used by Google client libraries for billing and quota.
-    - You are now authenticated with the gcloud CLI!
+### **Authenticate with Google Cloud:**
 
-2. Just in case set the project-id:
- 2.1 gcloud config set project pid-goeuweut-devops
+```sh
+gcloud auth login
+gcloud auth application-default login
+```
 
-3. Navigate to the directory where main.tf is:
-    - pwd: /home/ivaylorashkov/new_repo/go-ethereum/Terraform
-    - ivaylorashkov@DESKTOP-RBJR4FO:~/new_repo/go-ethereum/Terraform$ ls | grep main.tf
-    *main.tf
+Credentials saved to:
+`/home/ivaylorashkov/.config/gcloud/application_default_credentials.json`
 
-4.terraform init
-    - Terraform has been successfully initialized!
+### **Set the Project ID:**
 
-5.Check what terraform is planning to do:
-    5.1 terraform plan
+```sh
+gcloud config set project pid-goeuweut-devops
+```
 
-6. Deploy infrastructure:
-    6.1 terraform apply
+### **Navigate to the Terraform Directory:**
 
-7. Setting up region and zone as zone = us-central1-f, due to Google
-Copy policy on 3 zones, which exceeds the limit 250GB since 3*100GB = 300GB
+```sh
+cd /home/ivaylorashkov/new_repo/go-ethereum/Terraform
+ls | grep main.tf
+```
 
-GKE created
+### **Initialize Terraform:**
 
-1. install: sudo apt-get install google-cloud-cli-gke-gcloud-auth-plugin
+```sh
+terraform init
+```
 
-2.- gcloud container clusters get-credentials <your-cluster-name> --zone <your-zone>
-    gcloud container clusters get-credentials go-ethereum-cluster --zone us-central1-f
-    gcloud container clusters get-credentials go-ethereum-cluster --region=us-central1-f
+### **Plan Terraform Deployment:**
 
-3. kubectl cluster-info -> confirm the cluster is active;
-3. kubectl get nodes
-4. kubectl get namespace
-6. kubectl get pods -n devops-test-gke
+```sh
+terraform plan
+```
 
+### **Apply Terraform Deployment:**
+
+```sh
+terraform apply
+```
+
+---
+
+## **GKE Cluster Created - Next Steps**
+
+### **Install GKE Auth Plugin:**
+
+```sh
+sudo apt-get install google-cloud-cli-gke-gcloud-auth-plugin
+```
+
+### **Get Cluster Credentials:**
+
+```sh
+gcloud container clusters get-credentials go-ethereum-cluster --zone us-central1-f
+```
+
+### **Verify Cluster Status:**
+
+```sh
+kubectl cluster-info
+kubectl get nodes
+kubectl get namespace
+kubectl get pods -n devops-test-gke
+```
+
+Example Output:
+
+```
 NAME                                   READY   STATUS    RESTARTS   AGE
 go-ethereum-hardhat-547946667d-gmv8w   1/1     Running   0          8m37s
 go-ethereum-hardhat-547946667d-sbdkq   1/1     Running   0          16m
 go-ethereum-hardhat-547946667d-zrrsv   1/1     Running   0          8m37s
+```
 
-7. kubectl exec -it <pod-name> -n <namespace> -- /bin/sh
-kubectl exec -it go-ethereum-hardhat-547946667d-gmv8w -n devops-test-gke --bin/sh
+### **Access a Pod:**
+
+```sh
+kubectl exec -it go-ethereum-hardhat-547946667d-gmv8w -n devops-test-gke -- /bin/sh
+```
+
+
+![image](https://github.com/user-attachments/assets/6902a1bf-8bf0-419e-98b7-d8e56304f44c)
+
+![image](https://github.com/user-attachments/assets/575906f4-beb7-4e9e-9da8-c7bf4fddd36a)
+
+
 
