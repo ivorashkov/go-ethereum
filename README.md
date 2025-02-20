@@ -138,15 +138,18 @@ GKE created
 
 2.- gcloud container clusters get-credentials <your-cluster-name> --zone <your-zone>
     gcloud container clusters get-credentials go-ethereum-cluster --zone us-central1-f
+    gcloud container clusters get-credentials go-ethereum-cluster --region=us-central1-f
 
+3. kubectl cluster-info -> confirm the cluster is active;
 3. kubectl get nodes
 4. kubectl get namespace
 6. kubectl get pods -n devops-test-gke
 
 NAME                                   READY   STATUS    RESTARTS   AGE
-go-ethereum-hardhat-547946667d-hs9ww   1/1     Running   0          10m
-go-ethereum-hardhat-547946667d-j5cn7   1/1     Running   0          10m
-go-ethereum-hardhat-547946667d-sk8vk   1/1     Running   0          10m
+go-ethereum-hardhat-547946667d-gmv8w   1/1     Running   0          8m37s
+go-ethereum-hardhat-547946667d-sbdkq   1/1     Running   0          16m
+go-ethereum-hardhat-547946667d-zrrsv   1/1     Running   0          8m37s
 
 7. kubectl exec -it <pod-name> -n <namespace> -- /bin/sh
+kubectl exec -it go-ethereum-hardhat-547946667d-gmv8w -n devops-test-gke --bin/sh
 

@@ -82,7 +82,7 @@ resource "kubernetes_deployment" "default" {
   }
 
   spec {
-    replicas = 1
+    replicas = 3
 
     selector {
       match_labels = {
@@ -101,6 +101,7 @@ resource "kubernetes_deployment" "default" {
         container {
           name  = "go-ethereum-hardhat"
           image = "docker.io/ivaylorashkov/go-ethereum-hardhat:latest"
+          image_pull_policy = "Always"
 
           port {
             container_port = 8080
