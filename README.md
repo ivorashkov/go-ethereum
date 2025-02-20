@@ -194,6 +194,9 @@ spec {
 
 ![Pod Status Screenshot](https://github.com/user-attachments/assets/575906f4-beb7-4e9e-9da8-c7bf4fddd36a)
 
+![image](https://github.com/user-attachments/assets/4a2486ba-8045-4b9e-9138-c817e1778fd9)
+
+
 ---
 
 
