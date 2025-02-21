@@ -476,9 +476,7 @@ spec {
 
 ![image](https://github.com/user-attachments/assets/4a2486ba-8045-4b9e-9138-c817e1778fd9)
 
-6. **Add Blockscout explorer to the Docker Compose definition created:
-
-[Github](https://github.com/ivorashkov/go-ethereum/tree/master/docker-compose)
+6. **Add Blockscout explorer to the Docker Compose definition created: [Github](https://github.com/ivorashkov/go-ethereum/tree/master/docker-compose)
 
  - `docker-compose/ folder has been created with all dependencies and variables according to the official github reposigory: https://github.com/blockscout/blockscout/tree/master`
  -  backend was not able to start due to depricated functions in the code which were causing some issues, db_init and db could not start as well but there were no logs within the pods so I couldn't debug it.
