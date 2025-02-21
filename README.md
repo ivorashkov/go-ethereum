@@ -180,6 +180,9 @@
            run: docker push ${{ env.REGISTRY }}/${{ env.OWNER }}/go-ethereum-hardhat:${{ env.IMAGE_TAG }}
    ```
 
+   ![image](https://github.com/user-attachments/assets/f17814d0-35ee-4690-84b3-8e2a87b2e477)
+
+
 ## **Deploying GKE Cluster Using Terraform**
 
 ## **Requirements**
