@@ -1,4 +1,186 @@
-# **Deploying GKE Cluster Using Terraform**
+# **DevOps Take Home Task**
+1. **Fork the following repo:**
+    ```sh
+      git clone https://github.com/ethereum/go-ethereum
+    ```
+2. **Update your forked repo with the following functionality:**
+   - `When a PR with label CI:Build is merged in it, a trigger kicks in and`
+   - `builds a new docker image of the given project`
+   - `uploads it to a registry`
+     
+    ```yaml
+      name: CI-Build
+      
+      on:
+      pull_request:
+       types: [closed]
+       branches: ["master"]
+      
+      jobs:
+      build-docker-image:
+       if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'CI:Build')
+       runs-on: ubuntu-latest
+      
+       steps:
+         - name: Checkout repository
+           uses: actions/checkout@v4
+      
+         - name: Set up Docker Buildx
+           uses: docker/setup-buildx-action@v3
+      
+         # - name: Cache Docker layers
+         #   uses: actions/cache@v3
+         #   with:
+         #     path: /tmp/.buildx-cache
+         #     key: ${{ runner.os }}-buildx-${{ github.sha }}
+         #     restore-keys: |
+         #       ${{ runner.os }}-buildx-
+      
+         - name: Log in to Docker Hub Container Registry
+           uses: docker/login-action@v3
+           with:
+             username: ${{ vars.DOCKERHUB_USERNAME }}  
+             password: ${{ secrets.DOCKERHUB_TOKEN }}  
+      
+         - name: Build and push Docker image to Docker Hub Registry
+           uses: docker/build-push-action@v6
+           with:
+             context: .
+             push: true
+             tags: ivaylorashkov/go-ethereum:latest 
+    ```
+
+    ![image](https://github.com/user-attachments/assets/bac3c4ab-0066-4de6-91fc-1938b3514d0f)
+
+    
+   - `Create a Docker Compose definition that runs a local devnet with the newly built image.`
+     `Followed the documentation from https://hub.docker.com/r/ethereum/client-go AND https://geth.ethereum.org/docs/fundamentals/command-line-options`
+     
+    ```yaml
+      version: "3.9"
+      
+      services:
+        geth:
+          container_name: geth-devnet-go-ethereum
+          image: ivaylorashkov/go-ethereum:latest
+          networks:
+            - devnet
+          ports:
+            - "8545:8545"  # Map host port 8545 to container port 8545
+            - "8546:8546"  # Map host port 8546 to container port 8546
+            - "30303:30303"  # Map host port 30303 to container port 30303
+            - "30303:30303/udp"  # Map UDP port 30303 to the container
+          volumes:
+            - eth_data:/root/.ethereum  # Mount a Docker volume for persistent Ethereum data
+      
+          command: >
+            --dev
+            --http
+            --http.addr=0.0.0.0
+            --http.port=8545
+            --http.api=web3,eth,net,personal
+            --http.vhosts=*
+            --dev.period=5
+      
+      networks:
+        devnet:
+          driver: bridge
+      
+      
+      volumes:
+        eth_data:  # Define the volume here
+     
+    ```
+
+2. **Create e new directory named hardhat in the repository. Inside it start a new Sample Hardhat Project**
+   - `created folder hardhat/`
+   - `created Sample Hardhat Project with the documentation`
+   - `created docker image with go-ethereum and hardhat`
+   - `uploaded the image to dockerhub with gitActions workflow which triggers after PR with label CI:Deploy`
+   - `Add a step to the pipeline which runs the hardhat tests from the sample project against the image with predeployed contracts `
+
+   ```yaml
+   name: CI-Deploy to Local Devnet
+   
+   on:
+     pull_request:
+       types: [closed]
+       branches: ["master"]
+   
+   env:
+     IMAGE: ivaylorashkov/go-ethereum
+     OWNER: ivaylorashkov
+     IMAGE_TAG: latest
+     REGISTRY: docker.io
+   
+   jobs:
+     deploy-hardhat-ethereum:
+       if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'CI:Deploy')
+       runs-on: ubuntu-latest
+   
+       steps:
+         - name: Checkout repository
+           uses: actions/checkout@v4
+         
+         - name: Set up Docker Buildx
+           uses: docker/setup-buildx-action@v3
+   
+         - name: Log in to Docker Hub Container Registry
+           uses: docker/login-action@v3
+           with:
+             username: ${{ vars.DOCKERHUB_USERNAME }}  
+             password: ${{ secrets.DOCKERHUB_TOKEN }} 
+   
+         - name: Pull Docker image
+           run: docker pull ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ env.IMAGE_TAG }}
+    
+           # Workspace: /git_repo/hardhat
+           # dev mode, enable http RCP server for external access,
+           # allows connections from any IP, Port specified, Defines which RPC APIs are accessible
+         - name: Running image container
+           run: |
+             docker run -d --name geth-devnet-go-ethereum -p 8545:8545 -p 8546:8546 ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ env.IMAGE_TAG }} \
+               --dev --http --http.addr 0.0.0.0 --http.port 8545 \
+               --http.api personal,db,eth,net,web3 --dev.period 5
+   
+           # copy files from the git_repo to the container
+         - name: Copy hardhat files to running container
+           run: |
+             docker exec geth-devnet-go-ethereum mkdir -p /git_repo/hardhat
+             docker cp /home/runner/work/go-ethereum/go-ethereum/hardhat/. geth-devnet-go-ethereum:/git_repo/hardhat/
+             docker exec geth-devnet-go-ethereum ls -l /git_repo/hardhat
+             docker exec geth-devnet-go-ethereum ls /git_repo/hardhat
+   
+           # install nodejs and npm in docker container
+         - name: Installing Node.js and npm in the container
+           run: |
+             docker exec geth-devnet-go-ethereum apk add --no-cache nodejs npm
+         
+           # install hardhat locally within the pod
+         - name: Install local version of hardhat
+           run: docker exec geth-devnet-go-ethereum sh -c "cd /git_repo/hardhat && npm install hardhat"
+   
+           # Check hardhat version if its installed properly
+         - name: Check Hardhat version
+           run: docker exec geth-devnet-go-ethereum npx hardhat --version
+   
+         - name: Deploy hardhat sample project
+           run: docker exec geth-devnet-go-ethereum sh -c "cd /git_repo/hardhat && npm install hardhat"
+       
+         - name: Hardhat tests applied 
+           run: |
+             docker exec geth-devnet-go-ethereum sh -c "cd /git_repo/hardhat && npx hardhat test"
+             
+         - name: Build a new docker image
+           run: |
+               docker commit geth-devnet-go-ethereum go-eth-hardhat:latest
+               docker tag go-eth-hardhat:latest ${{ env.REGISTRY }}/${{ env.OWNER }}/go-ethereum-hardhat:${{ env.IMAGE_TAG }}
+     
+         - name: Push new image to ghcr.io
+           run: docker push ${{ env.REGISTRY }}/${{ env.OWNER }}/go-ethereum-hardhat:${{ env.IMAGE_TAG }}
+   ```
+
+## **Deploying GKE Cluster Using Terraform**
 
 ## **Requirements**
 
@@ -290,6 +472,14 @@ spec {
 ![Pod Status Screenshot](https://github.com/user-attachments/assets/575906f4-beb7-4e9e-9da8-c7bf4fddd36a)
 
 ![image](https://github.com/user-attachments/assets/4a2486ba-8045-4b9e-9138-c817e1778fd9)
+
+6. **Add Blockscout explorer to the Docker Compose definition created:
+
+[Github](https://github.com/ivorashkov/go-ethereum/tree/master/docker-compose)
+
+ - `docker-compose/ folder has been created with all dependencies and variables according to the official github reposigory: https://github.com/blockscout/blockscout/tree/master`
+ -  backend was not able to start due to depricated functions in the code which were causing some issues, db_init and db could not start as well but there were no logs within the pods so I couldn't debug it.
+
 
 
 ---
