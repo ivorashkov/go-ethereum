@@ -176,7 +176,7 @@
                docker commit geth-devnet-go-ethereum go-eth-hardhat:latest
                docker tag go-eth-hardhat:latest ${{ env.REGISTRY }}/${{ env.OWNER }}/go-ethereum-hardhat:${{ env.IMAGE_TAG }}
      
-         - name: Push new image to ghcr.io
+         - name: Push new image
            run: docker push ${{ env.REGISTRY }}/${{ env.OWNER }}/go-ethereum-hardhat:${{ env.IMAGE_TAG }}
    ```
 
