@@ -454,8 +454,10 @@ sudo apt-get install google-cloud-cli-gke-gcloud-auth-plugin
 ### **Get Kubernetes credentials for your cluster:**
 ```sh
 gcloud container clusters get-credentials <your-cluster-name> --zone <your-zone> OR gcloud container clusters get-credentials <your-cluster-name> --region <your-region>
+```
 
-EXAMPLE:
+Example:
+```sh
 gcloud container clusters get-credentials go-ethereum-cluster --zone us-central1-f
 gcloud container clusters get-credentials go-ethereum-cluster --region=us-central1-f
 ```
