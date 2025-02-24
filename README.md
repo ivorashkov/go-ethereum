@@ -274,7 +274,7 @@ gcloud compute zones list | grep us-central1
 ```
 - Choosing **zone:** `us-central1-f`
 
-❌ **Due to account restrictions I am setting region and zone to be the same. **
+❌ Due to account restrictions I am setting region and zone to be the same.
 
 ---
 
