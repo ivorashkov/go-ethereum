@@ -100,84 +100,80 @@
    - `Add a step to the pipeline which runs the hardhat tests from the sample project against the image with predeployed contracts `
 
    ```yaml
-   name: CI-Deploy to Local Devnet
-   
-   on:
-     pull_request:
-       types: [closed]
-       branches: ["master"]
-   
-   env:
-     IMAGE: ivaylorashkov/go-ethereum
-     OWNER: ivaylorashkov
-     IMAGE_TAG: latest
-     REGISTRY: docker.io
-   
-   jobs:
-     deploy-hardhat-ethereum:
-       if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'CI:Deploy')
-       runs-on: ubuntu-latest
-   
-       steps:
-         - name: Checkout repository
-           uses: actions/checkout@v4
-         
-         - name: Set up Docker Buildx
-           uses: docker/setup-buildx-action@v3
-   
-         - name: Log in to Docker Hub Container Registry
-           uses: docker/login-action@v3
-           with:
-             username: ${{ vars.DOCKERHUB_USERNAME }}  
-             password: ${{ secrets.DOCKERHUB_TOKEN }} 
-   
-         - name: Pull Docker image
-           run: docker pull ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ env.IMAGE_TAG }}
+    name: CI-Deploy to Local Devnet
     
-           # Workspace: /git_repo/hardhat
-           # dev mode, enable http RCP server for external access,
-           # allows connections from any IP, Port specified, Defines which RPC APIs are accessible
-         - name: Running image container
-           run: |
-             docker run -d --name geth-devnet-go-ethereum -p 8545:8545 -p 8546:8546 ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ env.IMAGE_TAG }} \
-               --dev --http --http.addr 0.0.0.0 --http.port 8545 \
-               --http.api personal,db,eth,net,web3 --dev.period 5
-   
-           # copy files from the git_repo to the container
-         - name: Copy hardhat files to running container
-           run: |
-             docker exec geth-devnet-go-ethereum mkdir -p /git_repo/hardhat
-             docker cp /home/runner/work/go-ethereum/go-ethereum/hardhat/. geth-devnet-go-ethereum:/git_repo/hardhat/
-             docker exec geth-devnet-go-ethereum ls -l /git_repo/hardhat
-             docker exec geth-devnet-go-ethereum ls /git_repo/hardhat
-   
-           # install nodejs and npm in docker container
-         - name: Installing Node.js and npm in the container
-           run: |
-             docker exec geth-devnet-go-ethereum apk add --no-cache nodejs npm
-         
-           # install hardhat locally within the pod
-         - name: Install local version of hardhat
-           run: docker exec geth-devnet-go-ethereum sh -c "cd /git_repo/hardhat && npm install hardhat"
-   
-           # Check hardhat version if its installed properly
-         - name: Check Hardhat version
-           run: docker exec geth-devnet-go-ethereum npx hardhat --version
-   
-         - name: Deploy hardhat sample project
-           run: docker exec geth-devnet-go-ethereum sh -c "cd /git_repo/hardhat && npm install hardhat"
-       
-         - name: Hardhat tests applied 
-           run: |
-             docker exec geth-devnet-go-ethereum sh -c "cd /git_repo/hardhat && npx hardhat test"
-             
-         - name: Build a new docker image
-           run: |
-               docker commit geth-devnet-go-ethereum go-eth-hardhat:latest
-               docker tag go-eth-hardhat:latest ${{ env.REGISTRY }}/${{ env.OWNER }}/go-ethereum-hardhat:${{ env.IMAGE_TAG }}
-     
-         - name: Push new image
-           run: docker push ${{ env.REGISTRY }}/${{ env.OWNER }}/go-ethereum-hardhat:${{ env.IMAGE_TAG }}
+    on:
+      pull_request:
+        types: [closed]
+        branches: ["master"]
+    
+    env:
+      IMAGE: ivaylorashkov/go-ethereum
+      OWNER: ivaylorashkov
+      IMAGE_TAG: latest
+      REGISTRY: docker.io
+    
+    jobs:
+      deploy-hardhat-ethereum:
+        if: github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'CI:Deploy')
+        runs-on: ubuntu-latest
+    
+        steps:
+          - name: Checkout repository
+            uses: actions/checkout@v4
+    
+          - name: Log in to Docker Hub Container Registry
+            uses: docker/login-action@v3
+            with:
+              username: ${{  vars.DOCKERHUB_USERNAME }}  
+              password: ${{ secrets.DOCKERHUB_TOKEN }}
+    
+          - name: Pull Docker image if exists
+            run: |
+              if docker pull ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ env.IMAGE_TAG }}; then
+                echo "Image exists."
+              else
+                echo "Image does not exist, skipping pull."
+              fi
+    
+          - name: Stop and remove old container if running
+            run: |
+              if [ "$(docker ps -q -f name=geth-devnet-go-ethereum)" ]; then
+                docker stop geth-devnet-go-ethereum && docker rm geth-devnet-go-ethereum
+              fi
+    
+          - name: Running image container
+            run: |
+              docker run -d --name geth-devnet-go-ethereum -p 8545:8545 -p 8546:8546 ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ env.IMAGE_TAG }} \
+                --dev --http --http.addr 0.0.0.0 --http.port 8545 \
+                --http.api personal,db,eth,net,web3 --dev.period 5
+    
+          - name: Copy hardhat files to container
+            run: |
+              docker exec geth-devnet-go-ethereum mkdir -p /git_repo/hardhat
+              docker cp hardhat/. geth-devnet-go-ethereum:/git_repo/hardhat/
+              docker exec geth-devnet-go-ethereum ls -l /git_repo/hardhat
+    
+          - name: Install Node.js and npm in container
+            run: docker exec geth-devnet-go-ethereum apk add --no-cache nodejs npm
+    
+          - name: Install Hardhat dependencies
+            run: docker exec geth-devnet-go-ethereum sh -c "cd /git_repo/hardhat && npm install"
+    
+          - name: Check Hardhat version
+            run: docker exec geth-devnet-go-ethereum npx hardhat --version
+    
+          - name: Run Hardhat tests
+            run: docker exec geth-devnet-go-ethereum sh -c "cd /git_repo/hardhat && npx hardhat test"
+    
+          - name: Build new Docker image
+            run: |
+              docker commit geth-devnet-go-ethereum go-eth-hardhat:latest
+              docker tag go-eth-hardhat:latest ${{ env.REGISTRY }}/${{ env.OWNER }}/go-ethereum-hardhat:${{ env.IMAGE_TAG }}
+    
+          - name: Push new Docker image
+            run: docker push ${{ env.REGISTRY }}/${{ env.OWNER }}/go-ethereum-hardhat:${{ env.IMAGE_TAG }}
+    
    ```
 
    ![image](https://github.com/user-attachments/assets/f17814d0-35ee-4690-84b3-8e2a87b2e477)
